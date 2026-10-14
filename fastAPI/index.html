@@ -1,0 +1,666 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #1f2937;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 22px 7%;
+        }
+
+        header h1 {
+            font-size: 25px;
+        }
+
+        header p {
+            margin-top: 7px;
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .toolbar input {
+            max-width: 320px;
+        }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px #dbeafe;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            padding: 10px 16px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 15px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        td .edit, td .delete {
+            margin: 2px;
+            padding: 8px 10px;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 7px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 28px;
+        }
+
+        .count {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .assistant-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .assistant-form textarea {
+            flex: 1;
+            min-height: 82px;
+            resize: vertical;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font: inherit;
+        }
+
+        .assistant-form textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px #dbeafe;
+            outline: none;
+        }
+
+        .assistant-answer {
+            white-space: pre-wrap;
+            background: #f8fafc;
+            border-radius: 7px;
+            color: #334155;
+            line-height: 1.5;
+            margin-top: 16px;
+            padding: 14px;
+            min-height: 48px;
+        }
+
+        @media (max-width: 700px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+
+            .toolbar input {
+                max-width: none;
+            }
+
+            .assistant-form {
+                flex-direction: column;
+            }
+
+            .assistant-form button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Employee Management System</h1>
+    <p>Manage employee records using FastAPI and MySQL</p>
+</header>
+
+<main class="container">
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <div class="toolbar">
+        <div>
+            <h2>Employees</h2>
+            <p>Manage your organization's employee records.</p>
+        </div>
+
+        <input
+            type="search"
+            id="search"
+            placeholder="Search by name or department..."
+            aria-label="Search employees"
+        >
+    </div>
+
+    <section class="panel">
+        <h2 id="formTitle">Add New Employee</h2>
+
+        <form id="employeeForm">
+            <div class="form-grid">
+
+                <div>
+                    <label for="emp_name">Employee Name</label>
+                    <input
+                        type="text"
+                        id="emp_name"
+                        maxlength="100"
+                        required
+                        placeholder="Enter employee name"
+                    >
+                </div>
+
+                <div>
+                    <label for="department">Department</label>
+                    <input
+                        type="text"
+                        id="department"
+                        maxlength="50"
+                        required
+                        placeholder="e.g. IT"
+                    >
+                </div>
+
+                <div>
+                    <label for="salary">Salary (₹)</label>
+                    <input
+                        type="number"
+                        id="salary"
+                        min="0"
+                        max="99999999.99"
+                        step="0.01"
+                        required
+                        placeholder="e.g. 35000"
+                    >
+                </div>
+
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="primary" id="saveButton">
+                    Add Employee
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary"
+                    id="cancelButton"
+                    hidden
+                >
+                    Cancel Edit
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Employee Directory</h2>
+        <p class="count" id="count">Loading employees...</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Salary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="employeeTable">
+                    <tr>
+                        <td colspan="5" class="empty">
+                            Loading employees...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Ask the Employee Assistant</h2>
+        <p class="count">
+            Ask questions about the employee records. Answers are grounded in
+            the retrieved records.
+        </p>
+        <form id="assistantForm" class="assistant-form">
+            <textarea
+                id="assistantQuestion"
+                maxlength="1000"
+                required
+                placeholder="e.g. Which employees work in IT?"
+                aria-label="Question for the employee assistant"
+            ></textarea>
+            <button type="submit" class="primary" id="askButton">
+                Ask
+            </button>
+        </form>
+        <div id="assistantAnswer" class="assistant-answer" hidden></div>
+    </section>
+
+</main>
+
+<script>
+    // Use the same FastAPI server that served this page.
+    const API_URL = window.location.origin;
+
+    let employees = [];
+    let editingId = null;
+
+    const form = document.getElementById("employeeForm");
+    const table = document.getElementById("employeeTable");
+    const statusBox = document.getElementById("status");
+    const saveButton = document.getElementById("saveButton");
+    const cancelButton = document.getElementById("cancelButton");
+    const assistantForm = document.getElementById("assistantForm");
+    const assistantQuestion = document.getElementById("assistantQuestion");
+    const assistantAnswer = document.getElementById("assistantAnswer");
+    const askButton = document.getElementById("askButton");
+
+    function showMessage(message, type = "success") {
+        statusBox.textContent = message;
+        statusBox.className = "status " + type;
+
+        if (type === "success") {
+            setTimeout(() => {
+                statusBox.className = "status";
+            }, 3500);
+        }
+    }
+
+    async function apiRequest(path, options = {}) {
+        let response;
+
+        try {
+            response = await fetch(API_URL + path, {
+                ...options,
+                headers: {
+                    ...(options.body
+                        ? { "Content-Type": "application/json" }
+                        : {}),
+                    ...options.headers
+                }
+            });
+        } catch (error) {
+            throw new Error(
+                "Cannot connect to FastAPI. Check that the server is running."
+            );
+        }
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const detail = data.detail;
+            const message = typeof detail === "string"
+                ? detail
+                : Array.isArray(detail)
+                    ? detail.map(item => item.msg).join(", ")
+                    : "Request failed";
+
+            throw new Error(message);
+        }
+
+        return data;
+    }
+
+    async function loadEmployees() {
+        table.innerHTML =
+            '<tr><td colspan="5" class="empty">Loading...</td></tr>';
+
+        try {
+            const data = await apiRequest("/employees");
+            employees = data.employees || [];
+            renderEmployees();
+        } catch (error) {
+            table.innerHTML =
+                '<tr><td colspan="5" class="empty">' +
+                'Could not load employees.</td></tr>';
+            document.getElementById("count").textContent =
+                "Unable to load employee records";
+            showMessage(error.message, "error");
+        }
+    }
+
+    function renderEmployees() {
+        const query = document.getElementById("search")
+            .value.trim().toLowerCase();
+
+        const filtered = employees.filter(employee =>
+            employee.emp_name.toLowerCase().includes(query) ||
+            employee.department.toLowerCase().includes(query) ||
+            String(employee.emp_id).includes(query)
+        );
+
+        document.getElementById("count").textContent =
+            `${filtered.length} employee(s) displayed`;
+
+        table.replaceChildren();
+
+        if (filtered.length === 0) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 5;
+            cell.className = "empty";
+            cell.textContent = "No employees found.";
+            row.appendChild(cell);
+            table.appendChild(row);
+            return;
+        }
+
+        filtered.forEach(employee => {
+            const row = document.createElement("tr");
+
+            const values = [
+                employee.emp_id,
+                employee.emp_name,
+                employee.department,
+                "₹" + Number(employee.salary).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            const actionCell = document.createElement("td");
+
+            const editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.className = "edit";
+            editButton.type = "button";
+            editButton.addEventListener("click", () => editEmployee(employee));
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.className = "delete";
+            deleteButton.type = "button";
+            deleteButton.addEventListener(
+                "click",
+                () => deleteEmployee(employee.emp_id)
+            );
+
+            actionCell.append(editButton, deleteButton);
+            row.appendChild(actionCell);
+            table.appendChild(row);
+        });
+    }
+
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const employee = {
+            emp_name: document.getElementById("emp_name").value.trim(),
+            department: document.getElementById("department").value.trim(),
+            salary: Number(document.getElementById("salary").value)
+        };
+
+        if (
+            !employee.emp_name ||
+            !employee.department ||
+            !Number.isFinite(employee.salary) ||
+            employee.salary < 0
+        ) {
+            showMessage("Please enter valid employee details.", "error");
+            return;
+        }
+
+        saveButton.disabled = true;
+
+        try {
+            if (editingId !== null) {
+                await apiRequest(`/employees/${editingId}`, {
+                    method: "PUT",
+                    body: JSON.stringify(employee)
+                });
+                showMessage("Employee updated successfully!");
+            } else {
+                await apiRequest("/employees", {
+                    method: "POST",
+                    body: JSON.stringify(employee)
+                });
+                showMessage("Employee added successfully!");
+            }
+
+            resetForm();
+            await loadEmployees();
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    function editEmployee(employee) {
+        editingId = employee.emp_id;
+
+        document.getElementById("emp_name").value = employee.emp_name;
+        document.getElementById("department").value = employee.department;
+        document.getElementById("salary").value = employee.salary;
+
+        document.getElementById("formTitle").textContent =
+            "Update Employee #" + employee.emp_id;
+
+        saveButton.textContent = "Update Employee";
+        cancelButton.hidden = false;
+
+        document.getElementById("emp_name").focus();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteEmployee(id) {
+        const confirmed = confirm(
+            `Are you sure you want to delete employee #${id}?`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await apiRequest(`/employees/${id}`, {
+                method: "DELETE"
+            });
+
+            if (editingId === id) resetForm();
+
+            showMessage("Employee deleted successfully!");
+            await loadEmployees();
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    }
+
+    function resetForm() {
+        form.reset();
+        editingId = null;
+
+        document.getElementById("formTitle").textContent =
+            "Add New Employee";
+
+        saveButton.textContent = "Add Employee";
+        cancelButton.hidden = true;
+    }
+
+    cancelButton.addEventListener("click", resetForm);
+    document.getElementById("search")
+        .addEventListener("input", renderEmployees);
+
+    assistantForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const question = assistantQuestion.value.trim();
+        if (!question) return;
+
+        askButton.disabled = true;
+        assistantAnswer.hidden = false;
+        assistantAnswer.textContent = "Thinking...";
+
+        try {
+            const data = await apiRequest("/ask", {
+                method: "POST",
+                body: JSON.stringify({ question })
+            });
+            assistantAnswer.textContent = data.answer;
+        } catch (error) {
+            assistantAnswer.textContent = error.message;
+        } finally {
+            askButton.disabled = false;
+        }
+    });
+
+    loadEmployees();
+</script>
+
+</body>
+</html>
